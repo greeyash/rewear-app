@@ -1,0 +1,76 @@
+CREATE TABLE users (
+  user_id SERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  cart_id INT,
+  total_contrib DECIMAL DEFAULT 0,
+  user_name TEXT NOT NULL,
+  address TEXT
+);
+
+CREATE TABLE carts (
+  cart_id SERIAL PRIMARY KEY,
+  user_id INT UNIQUE,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE stores (
+  store_id SERIAL PRIMARY KEY,
+  owner_id INT NOT NULL,
+  rating DECIMAL,
+  location TEXT,
+  description TEXT,
+  FOREIGN KEY (owner_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE products (
+  product_id SERIAL PRIMARY KEY,
+  product_name TEXT NOT NULL,
+  photo TEXT,
+  grade VARCHAR(50),
+  store_id INT,
+  description TEXT,
+  size VARCHAR(50),
+  price DECIMAL NOT NULL,
+  material VARCHAR(100),
+  category VARCHAR(50),
+  status VARCHAR(50) CHECK (status IN ('sold', 'unsold')),
+  upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (store_id) REFERENCES stores(store_id) ON DELETE CASCADE
+);
+
+CREATE TABLE cart_items (
+  cart_item_id SERIAL PRIMARY KEY,
+  cart_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL CHECK (quantity > 0),
+  FOREIGN KEY (cart_id) REFERENCES carts(cart_id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+);
+
+CREATE TABLE donations (
+  donation_id SERIAL PRIMARY KEY,
+  donator_id INT NOT NULL,
+  product_id INT,
+  donator_name TEXT,
+  donation_target TEXT,
+  donation_address TEXT,
+  donation_status VARCHAR(50) CHECK (donation_status IN ('in progress', 'completed', 'failed')),
+  donation_desc TEXT,
+  donation_progress DECIMAL DEFAULT 0,
+  FOREIGN KEY (donator_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE SET NULL
+);
+
+CREATE TABLE transactions (
+  transaction_id SERIAL PRIMARY KEY,
+  buyer_id INT NOT NULL,
+  seller_id INT NOT NULL,
+  product_id INT NOT NULL,
+  total_price DECIMAL NOT NULL,
+  payment_status VARCHAR(50) CHECK (payment_status IN ('pending', 'completed', 'failed')),
+  transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (seller_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+);
