@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type PhotoType = 'front' | 'back' | 'detail' | 'label' | 'additional';
 
@@ -12,6 +13,7 @@ interface FormData {
 }
 
 export default function SellClothingForm() {
+  const router = useRouter();
   const [photos, setPhotos] = useState<Record<PhotoType, string | null>>({
     front: null,
     back: null,
@@ -25,8 +27,10 @@ export default function SellClothingForm() {
     category: '',
     size: '',
     description: '',
-    price: ''
+    price: '',
   });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePhotoUpload = (type: PhotoType, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -89,6 +93,8 @@ export default function SellClothingForm() {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       // Convert photos to base64 (remove data:image/... prefix)
       const photosBase64: Record<string, string> = {};
@@ -118,15 +124,16 @@ export default function SellClothingForm() {
       
       if (result.success) {
         alert('Produk berhasil diupload!');
-        // Reset form
-        setPhotos({ front: null, back: null, detail: null, label: null, additional: null });
-        setFormData({ productName: '', category: '', size: '', description: '', price: '' });
+        // Redirect ke grading page dengan product_id
+        router.push(`/grading/${result.product_id}`);
       } else {
         alert('Error: ' + result.error);
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Submit error:', error);
       alert('Gagal submit produk');
+      setIsLoading(false);
     }
   };
 
@@ -280,9 +287,10 @@ export default function SellClothingForm() {
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          className="w-full bg-gray-900 text-white py-4 rounded-full font-medium hover:bg-gray-800 transition-colors"
+          disabled={isLoading}
+          className="w-full bg-gray-900 text-white py-4 rounded-full font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Submit
+          {isLoading ? 'Sedang mengunggah...' : 'Submit'}
         </button>
       </div>
     </div>

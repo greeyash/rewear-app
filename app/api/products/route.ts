@@ -1,4 +1,4 @@
-// app/api/products/route.ts
+// app/api/products/route.ts - FIXED VERSION
 import { supabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 
@@ -13,6 +13,7 @@ export async function POST(req: Request) {
       category,
       size,
       material,
+      quantity,
       photos // { front, back, detail, label, additional }
     } = body;
 
@@ -99,11 +100,12 @@ export async function POST(req: Request) {
         product_name,
         user_id: parseInt(user_id),
         price: parseFloat(price),
+        quantity: parseInt(quantity) || 1,
         description: description || null,
         category: category || null,
         size: size || null,
         material: material || null,
-        photo: photoData, // Simpan sebagai JSON string
+        photo: photoData,
         status: "unsold",
         grade: null, // Akan di-set oleh AI
         upload_date: new Date().toISOString()
@@ -126,13 +128,15 @@ export async function POST(req: Request) {
       throw new Error(`Database error: ${insertError.message}`);
     }
 
+    // FIXED: Return proper response with product_id
     return NextResponse.json({ 
       success: true, 
+      product_id: product.product_id, // <- IMPORTANT: Return product_id
       product: {
         ...product,
-        photos: uploadedPhotos // Parsed photos untuk frontend
+        photos: uploadedPhotos
       }
-    });
+    }, { status: 201 });
 
   } catch (err: any) {
     console.error("Upload product error:", err);
@@ -143,17 +147,22 @@ export async function POST(req: Request) {
   }
 }
 
-// GET - Ambil semua products
+// GET - Ambil semua products atau single product
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const user_id = searchParams.get('user_id');
     const status = searchParams.get('status');
+    const product_id = searchParams.get('product_id');
 
     let query = supabase
       .from('products')
       .select('*')
       .order('upload_date', { ascending: false });
+
+    if (product_id) {
+      query = query.eq('product_id', parseInt(product_id));
+    }
 
     if (user_id) {
       query = query.eq('user_id', parseInt(user_id));
@@ -168,10 +177,35 @@ export async function GET(req: Request) {
     if (error) throw error;
 
     // Parse photo JSON untuk setiap product
-    const products = data.map(product => ({
-      ...product,
-      photos: product.photo ? JSON.parse(product.photo) : null
-    }));
+    const products = (data || []).map(product => {
+      let photos = null;
+      
+      if (product.photo) {
+        try {
+          // Check if it's already a JSON string
+          if (typeof product.photo === 'string' && product.photo.startsWith('{')) {
+            photos = JSON.parse(product.photo);
+          } 
+          // If it's just a URL string (legacy format)
+          else if (typeof product.photo === 'string' && product.photo.startsWith('http')) {
+            photos = { front: product.photo };
+          }
+          // If it's already an object
+          else if (typeof product.photo === 'object') {
+            photos = product.photo;
+          }
+        } catch (e) {
+          console.error('Error parsing photo for product', product.product_id, e);
+          // Fallback: treat as single URL
+          photos = { front: product.photo };
+        }
+      }
+      
+      return {
+        ...product,
+        photos
+      };
+    });
 
     return NextResponse.json({ 
       success: true, 
@@ -180,6 +214,42 @@ export async function GET(req: Request) {
 
   } catch (err: any) {
     console.error("Get products error:", err);
+    return NextResponse.json({ 
+      success: false, 
+      error: err.message 
+    }, { status: 500 });
+  }
+}
+
+// PATCH - Update product
+export async function PATCH(req: Request) {
+  try {
+    const body = await req.json();
+    const { product_id, ...updates } = body;
+
+    if (!product_id) {
+      return NextResponse.json({ 
+        success: false,
+        error: "Product ID required" 
+      }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('products')
+      .update(updates)
+      .eq('product_id', parseInt(product_id))
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ 
+      success: true, 
+      product: data 
+    });
+
+  } catch (err: any) {
+    console.error("Update product error:", err);
     return NextResponse.json({ 
       success: false, 
       error: err.message 
