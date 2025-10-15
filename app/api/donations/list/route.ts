@@ -1,0 +1,56 @@
+// app/api/donations/list/route.ts
+import { supabase } from "@/lib/supabase";
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  try {
+    // Fetch donations
+    const { data: donationsData, error: donationsError } = await supabase
+      .from("donations")
+      .select("*")
+      .eq("donation_status", "in progress")
+      .order("donation_id", { ascending: false });
+
+    if (donationsError) {
+      console.error("List donations error:", donationsError);
+      return NextResponse.json({
+        success: false,
+        error: donationsError.message
+      }, { status: 500 });
+    }
+
+    // Fetch organizations
+    const orgIds = donationsData.map(d => d.organization_id).filter(Boolean);
+    const { data: orgsData, error: orgsError } = await supabase
+      .from("organizations")
+      .select("organization_id, organization_name")
+      .in("organization_id", orgIds);
+
+    if (orgsError) {
+      console.error("List organizations error:", orgsError);
+      return NextResponse.json({
+        success: false,
+        error: orgsError.message
+      }, { status: 500 });
+    }
+
+    // Map organizations to donations
+    const orgsMap = new Map(orgsData.map(org => [org.organization_id, org]));
+    const donations = donationsData.map(donation => ({
+      ...donation,
+      organization: orgsMap.get(donation.organization_id) || { organization_name: "Unknown" }
+    }));
+
+    return NextResponse.json({
+      success: true,
+      donations
+    });
+
+  } catch (err: any) {
+    console.error("List donations error:", err);
+    return NextResponse.json({
+      success: false,
+      error: err.message || "Terjadi kesalahan"
+    }, { status: 500 });
+  }
+}
