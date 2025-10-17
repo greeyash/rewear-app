@@ -5,6 +5,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from 'next/image';
 
 const plusJakarta = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
@@ -40,26 +41,18 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  
 
-  // Hero slides
+  // Hero slides - hanya 2 slide
   const heroSlides = [
     {
       title: "Uniting Threads and Trees for Better Earth",
-      subtitle: "Bergabunglah dalam gerakan fashion berkelanjutan",
-      image: "/hero1.jpg",
-      color: "from-emerald-600 to-teal-600"
+      subtitle: "Bergabunglah dalam gerakan fashion berkelanjutan"
     },
     {
       title: "Fashion Berkelanjutan Dimulai dari Kamu",
-      subtitle: "Setiap pakaian bekas punya cerita baru",
-      image: "/hero2.jpg",
-      color: "from-blue-600 to-cyan-600"
-    },
-    {
-      title: "Belanja Cerdas, Selamatkan Bumi",
-      subtitle: "Kurangi limbah tekstil dengan gaya",
-      image: "/hero3.jpg",
-      color: "from-purple-600 to-pink-600"
+      subtitle: "Setiap pakaian bekas punya cerita baru"
     }
   ];
 
@@ -122,60 +115,126 @@ export default function Home() {
   };
 
   return (
-    <div className={`min-h-screen bg-white ${plusJakarta.className}`}>
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/">
-            <h1 className="text-2xl font-bold text-gray-800 cursor-pointer hover:text-green-600">
-              ReWear
-            </h1>
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link href="/" className="text-gray-700 hover:text-green-600 font-medium">
-              Home
-            </Link>
-            <Link href="/products" className="text-gray-700 hover:text-green-600 font-medium">
-              Produk
-            </Link>
-            <Link href="/donations" className="text-gray-700 hover:text-green-600 font-medium">
-              Donasi
-            </Link>
-            <button className="p-2 hover:bg-gray-100 rounded-full">
-              🔔
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded-full relative">
-              🛒
-              <span className="absolute top-0 right-0 bg-purple-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                0
-              </span>
-            </button>
+    <div className="min-h-screen" style={{ backgroundColor: "#F1F1EF" }}>
+          {/* Navigation Bar */}
+          <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+            <div className="px-8 py-4">
+              <div className="flex items-center justify-between gap-4">
+                {/* Logo */}
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                >
+                  <Image
+                    src="/assets/logo-rewearr.png"
+                    alt="ReWear Logo"
+                    width={140}
+                    height={40}
+                    className="object-contain"
+                  />
+                </button>
+    
+                {/* Search Bar */}
+                <form onSubmit={handleSearch} className="flex justify-center flex-1 max-w-3xl">
+                  <div
+                    className="relative flex items-center w-full"
+                    style={{
+                      maxWidth: '1100px',
+                      height: '50px',
+                      borderRadius: '100px',
+                      border: '1px solid #868686',
+                      background: '#FFF',
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Cari produk thrift..."
+                      className="w-full h-full rounded-full pl-6 pr-12 text-gray-700 placeholder-gray-400 focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      className="absolute right-4 top-1/2 -translate-y-1/2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="23"
+                        height="24"
+                        viewBox="0 0 23 24"
+                        fill="none"
+                      >
+                        <path
+                          d="M16 16.4L22 23M10 1C14.9706 1 19 4.93989 19 9.8C19 14.6601 14.9706 18.6 10 18.6C5.02944 18.6 1 14.6601 1 9.8C1 4.93989 5.02944 1 10 1Z"
+                          stroke="#2D322D"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </form>
+    
+                {/* Cart Button */}
+                <button
+                  onClick={() => router.push('/cart')}
+                  className="w-[50px] h-[50px] flex items-center justify-center transition-transform hover:scale-105 flex-shrink-0"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="50"
+                    height="50"
+                    viewBox="0 0 50 50"
+                    fill="none"
+                  >
+                    <circle
+                      cx="25"
+                      cy="25"
+                      r="24.5"
+                      fill="url(#paint0_linear_398_102)"
+                      fillOpacity="0.9"
+                      stroke="white"
+                    />
+                    <path
+                      d="M13 15H14.696C15.1859 15 15.6036 15.3548 15.6829 15.8382L16.1818 18.8824M16.1818 18.8824L17.8161 28.8529C17.9746 29.8197 18.8101 30.5294 19.7898 30.5294H30.392C31.3718 30.5294 32.2072 29.8197 32.3657 28.8529L33.6191 21.2059C33.8187 19.9884 32.8792 18.8824 31.6455 18.8824H16.1818ZM21.2727 33.1176C20.2184 33.1176 19.3636 33.9867 19.3636 35.0588C19.3636 36.1309 20.2184 37 21.2727 37C22.3271 37 23.1818 36.1309 23.1818 35.0588C23.1818 33.9867 22.3271 33.1176 21.2727 33.1176ZM27 35.0588C27 33.9867 27.8547 33.1176 28.9091 33.1176C29.9635 33.1176 30.8182 33.9867 30.8182 35.0588C30.8182 36.1309 29.9635 37 28.9091 37C27.8547 37 27 36.1309 27 35.0588Z"
+                      stroke="#2D322D"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <defs>
+                      <linearGradient
+                        id="paint0_linear_398_102"
+                        x1="4.41176"
+                        y1="14.7059"
+                        x2="46.3235"
+                        y2="37.5"
+                        gradientUnits="userSpaceOnUse"
+                      >
+                        <stop stopColor="white" stopOpacity="0.5" />
+                        <stop offset="0.5" stopColor="white" />
+                        <stop offset="1" stopColor="white" stopOpacity="0.4" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </nav>
-        </div>
-      </header>
-
-      {/* Search Bar */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <form onSubmit={handleSearch} className="relative max-w-3xl mx-auto">
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Cari produk pakaian bekas..."
-            className="w-full px-6 py-3 border-2 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-          <button 
-            type="submit" 
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700"
-          >
-            🔍
-          </button>
-        </form>
-      </div>
 
       {/* Hero Carousel */}
       <div className="max-w-7xl mx-auto px-4 mb-12">
-        <div className="relative h-96 rounded-3xl overflow-hidden">
+        <div
+          className="relative rounded-[30px] overflow-hidden shadow-lg mx-auto"
+          style={{
+            backgroundImage: `url(/assets/hero-bg.png)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            width: "1200px",
+            height: "526px",
+            flexShrink: 0,
+            boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.25)",
+          }}
+        >
           {heroSlides.map((slide, idx) => (
             <div
               key={idx}
@@ -183,12 +242,12 @@ export default function Home() {
                 idx === currentSlide ? "opacity-100" : "opacity-0"
               }`}
             >
-              <div className={`w-full h-full bg-gradient-to-r ${slide.color} flex items-center justify-center`}>
+              <div className="w-full h-full flex items-center justify-center">
                 <div className="text-center text-white px-8">
                   <h2 className="text-5xl font-bold mb-4">{slide.title}</h2>
                   <p className="text-xl mb-6">{slide.subtitle}</p>
-                  <button 
-                    onClick={() => router.push("/products")}
+                  <button
+                    onClick={() => window.open("https://sejauh.com/", "_blank")}
                     className="bg-white text-gray-800 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors"
                   >
                     Shop Now
