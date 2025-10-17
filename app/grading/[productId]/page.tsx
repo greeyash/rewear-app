@@ -50,6 +50,8 @@ export default function GradingPage() {
 
   // Simulasi proses grading
   useEffect(() => {
+    if (!product) return;
+
     const progressSteps = [
       { percent: 20, text: 'Menganalisis foto tampak depan...' },
       { percent: 40, text: 'Memeriksa foto tampak belakang...' },
@@ -66,18 +68,61 @@ export default function GradingPage() {
         currentStep++;
       } else {
         clearInterval(interval);
-        setTimeout(() => {
+        setTimeout(async () => {
+          // Generate random grade jika belum ada
+          const generatedGrade = product.grade || generateRandomGrade();
+          
+          // Simpan grade ke database
+          await saveGradeToDatabase(generatedGrade);
+          
+          setGrade(generatedGrade as 'A' | 'B' | 'C' | 'D');
+          setReason(getReasonByGrade(generatedGrade));
           setStage('result');
-          if (product?.grade) {
-            setGrade(product.grade as 'A' | 'B' | 'C' | 'D');
-            setReason(getReasonByGrade(product.grade));
-          }
         }, 500);
       }
     }, 800);
 
     return () => clearInterval(interval);
   }, [product]);
+
+  // Generate random grade untuk simulasi AI
+  const generateRandomGrade = (): string => {
+    const grades = ['A', 'B', 'C', 'D'];
+    const weights = [0.3, 0.4, 0.2, 0.1]; // Probabilitas untuk A, B, C, D
+    const random = Math.random();
+    let sum = 0;
+    
+    for (let i = 0; i < grades.length; i++) {
+      sum += weights[i];
+      if (random <= sum) {
+        return grades[i];
+      }
+    }
+    return 'B'; // default
+  };
+
+  // Simpan grade ke database
+  const saveGradeToDatabase = async (gradeValue: string) => {
+    try {
+      const productId = params.productId;
+      
+      const response = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          grade: gradeValue 
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to save grade to database');
+      } else {
+        console.log('Grade saved successfully:', gradeValue);
+      }
+    } catch (error) {
+      console.error('Error saving grade:', error);
+    }
+  };
 
   const getReasonByGrade = (gradeValue: string): string => {
     switch (gradeValue) {
