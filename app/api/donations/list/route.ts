@@ -1,16 +1,32 @@
 // app/api/donations/list/route.ts
-// @ts-nocheck
 import { supabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Fetch donations dengan urutan status
-    const { data: donationsData, error: donationsError } = await supabase
+    const { searchParams } = new URL(req.url);
+    const creatorId = searchParams.get("creator_id");
+    const status = searchParams.get("status");
+
+    // Build query
+    let query = supabase
       .from("donations")
       .select("*")
-      .in("donation_status", ["in progress", "completed", "reported"])
-      .order("donation_id", { ascending: false });
+      .in("donation_status", ["in progress", "completed", "reported"]);
+
+    // Filter by creator (untuk profile page)
+    if (creatorId) {
+      query = query.eq("creator_id", parseInt(creatorId));
+    }
+
+    // Filter by status (opsional)
+    if (status) {
+      query = query.eq("donation_status", status);
+    }
+
+    query = query.order("donation_id", { ascending: false });
+
+    const { data: donationsData, error: donationsError } = await query;
 
     if (donationsError) {
       console.error("List donations error:", donationsError);
@@ -22,9 +38,17 @@ export async function GET() {
 
     // Fetch organizations
     const orgIds = donationsData.map(d => d.organization_id).filter(Boolean);
+    
+    if (orgIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        donations: []
+      });
+    }
+
     const { data: orgsData, error: orgsError } = await supabase
       .from("organizations")
-      .select("organization_id, organization_name")
+      .select("organization_id, organization_name, organization_desc")
       .in("organization_id", orgIds);
 
     if (orgsError) {
@@ -35,20 +59,16 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    // Map organizations to donations dan sort by status
+    // Map organizations to donations
     const orgsMap = new Map(orgsData.map(org => [org.organization_id, org]));
     let donations = donationsData.map(donation => ({
       ...donation,
-      organization: orgsMap.get(donation.organization_id) || { organization_name: "Unknown" }
+      organization: orgsMap.get(donation.organization_id) || { 
+        organization_id: null,
+        organization_name: "Unknown",
+        organization_desc: null
+      }
     }));
-
-    // Sort: in progress → completed → reported
-    const statusOrder = { "in progress": 1, "completed": 2, "reported": 3 };
-    donations.sort((a, b) => {
-      const orderA = statusOrder[a.donation_status] || 999;
-      const orderB = statusOrder[b.donation_status] || 999;
-      return orderA - orderB;
-    });
 
     return NextResponse.json({
       success: true,

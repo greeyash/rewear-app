@@ -2,325 +2,328 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Plus_Jakarta_Sans } from "next/font/google";
 
-interface UserAddress {
-  user_id: number;
-  user_name: string;
-  address: string;
-  location: string;
-}
+const plusJakarta = Plus_Jakarta_Sans({ 
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"]
+});
 
-export default function EditAddressPage() {
+export default function ProfilePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   
-  const [formData, setFormData] = useState({
-    address: '',
-    location: ''
-  });
-
-  const [errors, setErrors] = useState({
-    address: '',
-    location: ''
-  });
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userData, setUserData] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [donations, setDonations] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'products' | 'donations'>('products');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchUserAddress();
+    const userId = localStorage.getItem('userId');
+    
+    if (!userId) {
+      router.push('/login');
+      return;
+    }
+    
+    setCurrentUserId(userId);
+    fetchUserData(userId);
+    fetchProducts(userId);
+    fetchDonations(userId);
   }, []);
 
-  const fetchUserAddress = async () => {
+  const fetchUserData = async (userId: string) => {
     try {
-      const userId = localStorage.getItem('userId');
-      
-      if (!userId) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(`/api/users/address?user_id=${userId}`);
+      const response = await fetch(`/api/users/profile?user_id=${userId}`);
       const result = await response.json();
-
+      
       if (result.success) {
-        setFormData({
-          address: result.user.address || '',
-          location: result.user.location || ''
-        });
-      } else {
-        setError(result.error);
+        setUserData(result.user);
       }
-    } catch (err: any) {
-      console.error('Fetch address error:', err);
-      setError('Gagal memuat data alamat');
-    } finally {
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
+
+  const fetchProducts = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/products?user_id=${userId}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setProducts(result.products || []);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching products:', error);
       setLoading(false);
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {
-      address: '',
-      location: ''
-    };
-
-    let isValid = true;
-
-    if (!formData.address.trim()) {
-      newErrors.address = 'Alamat lengkap wajib diisi';
-      isValid = false;
-    } else if (formData.address.trim().length < 10) {
-      newErrors.address = 'Alamat terlalu pendek (minimal 10 karakter)';
-      isValid = false;
-    }
-
-    if (!formData.location.trim()) {
-      newErrors.location = 'Kota/Kabupaten wajib diisi';
-      isValid = false;
-    } else if (formData.location.trim().length < 3) {
-      newErrors.location = 'Nama kota terlalu pendek';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-    setSuccess(false);
-
+  const fetchDonations = async (userId: string) => {
     try {
-      const userId = localStorage.getItem('userId');
-      
-      if (!userId) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch('/api/users/address', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          address: formData.address,
-          location: formData.location
-        }),
-      });
-
+      const response = await fetch(`/api/donations/list?creator_id=${userId}`);
       const result = await response.json();
-
+      
       if (result.success) {
-        setSuccess(true);
-        // Redirect after 1.5 seconds
-        setTimeout(() => {
-          router.back();
-        }, 1500);
-      } else {
-        setError(result.error || 'Gagal menyimpan alamat');
+        setDonations(result.donations || []);
       }
-    } catch (err: any) {
-      console.error('Save address error:', err);
-      setError('Gagal menyimpan alamat. Silakan coba lagi.');
-    } finally {
-      setSaving(false);
+    } catch (error) {
+      console.error('Error fetching donations:', error);
     }
   };
 
-  const handleChange = (field: 'address' | 'location', value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Clear error when user types
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
-  };
-
-  if (loading) {
+  if (loading || !userData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen bg-gray-50 flex items-center justify-center ${plusJakarta.className}`}>
         <div className="text-gray-500">Memuat...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white sticky top-0 z-10 px-4 py-3 flex items-center gap-3 shadow-sm">
-        <button 
-          onClick={() => router.back()} 
-          className="p-2 -ml-2"
-          disabled={saving}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
-        </button>
-        <h1 className="text-lg font-medium">Edit Alamat</h1>
+    <div className={`min-h-screen bg-gray-50 pb-8 ${plusJakarta.className}`}>
+      {/* Header Profile Card */}
+      <div className="bg-gradient-to-br from-gray-100 to-gray-200 px-8 pt-8 pb-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-start justify-between mb-6">
+            {/* Profile Photo & Info */}
+            <div className="flex items-center gap-4">
+              <div className="w-24 h-24 rounded-full bg-gray-300 overflow-hidden shadow-lg flex items-center justify-center">
+                {userData.profile_photo_url ? (
+                  <img src={userData.profile_photo_url} alt={userData.user_name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-3xl font-bold">
+                    {userData.user_name?.charAt(0).toUpperCase() || 'M'}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800 mb-1">{userData.user_name}</h1>
+                <p className="text-gray-600 text-sm mb-1">{userData.email}</p>
+                <div className="flex items-center gap-1 text-gray-700">
+                  <span className="text-sm">📍 {userData.location || 'Jakarta'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <button 
+              onClick={() => router.push('/edit-profile')}
+              className="flex-1 bg-white hover:bg-gray-50 text-gray-800 py-3 px-6 rounded-xl font-semibold transition-colors shadow-md"
+            >
+              Edit Profil
+            </button>
+            <button 
+              onClick={() => router.push('/upload-product')}
+              className="flex-1 bg-white hover:bg-gray-50 text-gray-800 py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 shadow-md"
+            >
+              📦 Tambah Produk
+            </button>
+            <button 
+              onClick={() => router.push('/create-donation')}
+              className="flex-1 bg-white hover:bg-gray-50 text-gray-800 py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 shadow-md"
+            >
+              ❤️ Upload Donasi
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Success Message */}
-      {success && (
-        <div className="mx-4 mt-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-start gap-3">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <div>
-            <div className="font-medium">Berhasil!</div>
-            <div className="text-sm">Alamat berhasil diperbarui</div>
-          </div>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="mx-4 mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start gap-3">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <div>
-            <div className="font-medium">Error</div>
-            <div className="text-sm">{error}</div>
-          </div>
-        </div>
-      )}
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="p-4 space-y-4">
-        {/* Location (Kota/Kabupaten) */}
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Kota/Kabupaten <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.location}
-            onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="Contoh: Bandung, Jawa Barat"
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-colors ${
-              errors.location 
-                ? 'border-red-300 focus:border-red-500' 
-                : 'border-gray-200 focus:border-[#66bb6a]'
+      <div className="max-w-6xl mx-auto px-8">
+        {/* Tabs */}
+        <div className="flex gap-4 mt-6 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`px-6 py-3 font-semibold transition-colors relative ${
+              activeTab === 'products'
+                ? 'text-gray-800'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
-            disabled={saving}
-          />
-          {errors.location && (
-            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              {errors.location}
-            </p>
-          )}
-          <p className="mt-2 text-xs text-gray-500">
-            Masukkan nama kota atau kabupaten tempat Anda tinggal
-          </p>
-        </div>
-
-        {/* Full Address */}
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Alamat Lengkap <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={formData.address}
-            onChange={(e) => handleChange('address', e.target.value)}
-            placeholder="Contoh: Jl. Cihampelas No. 123, Kec. Coblong, RT 02/RW 05"
-            rows={4}
-            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-colors resize-none ${
-              errors.address 
-                ? 'border-red-300 focus:border-red-500' 
-                : 'border-gray-200 focus:border-[#66bb6a]'
+          >
+            Produk Saya
+            {activeTab === 'products' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-800"></div>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('donations')}
+            className={`px-6 py-3 font-semibold transition-colors relative ${
+              activeTab === 'donations'
+                ? 'text-gray-800'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
-            disabled={saving}
-          />
-          {errors.address && (
-            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              {errors.address}
-            </p>
-          )}
-          <p className="mt-2 text-xs text-gray-500">
-            Masukkan alamat lengkap termasuk nama jalan, nomor rumah, RT/RW, dan kecamatan
-          </p>
+          >
+            Donasi Saya
+            {activeTab === 'donations' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-800"></div>
+            )}
+          </button>
         </div>
 
-        {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 text-blue-600 mt-0.5">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="16" x2="12" y2="12"/>
-            <line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Kenapa perlu alamat lengkap?</p>
-            <ul className="space-y-1 text-xs">
-              <li>• Untuk pengiriman produk yang Anda beli</li>
-              <li>• Memudahkan pembeli menemukan lokasi Anda</li>
-              <li>• Meningkatkan kepercayaan di marketplace</li>
-            </ul>
-          </div>
-        </div>
+        {/* Content */}
+        <div className="mt-6">
+          {activeTab === 'products' && (
+            <div>
+              {products.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="text-8xl mb-4">📦</div>
+                  <p className="text-xl font-semibold text-gray-800 mb-2">Belum ada produk</p>
+                  <p className="text-gray-600 mb-6">Mulai upload produk thrift kamu</p>
+                  <button
+                    onClick={() => router.push('/upload-product')}
+                    className="px-6 py-3 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-900"
+                  >
+                    Tambah Produk
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-6">
+                  {products.map((product) => {
+                    let photoUrl = '/placeholder.jpg';
+                    try {
+                      const photos = typeof product.photo === 'string' 
+                        ? JSON.parse(product.photo) 
+                        : product.photo;
+                      photoUrl = photos?.front || photoUrl;
+                    } catch (e) {
+                      console.error('Error parsing photo:', e);
+                    }
 
-        {/* Save Button */}
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full bg-[#66bb6a] text-white font-semibold py-3 rounded-lg hover:bg-[#4caf50] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {saving ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"/>
-              Menyimpan...
-            </>
-          ) : (
-            <>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
-              </svg>
-              Simpan Alamat
-            </>
+                    return (
+                      <div 
+                        key={product.product_id} 
+                        onClick={() => router.push(`/products/${product.product_id}`)}
+                        className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer"
+                      >
+                        <div className="relative aspect-square bg-gray-100">
+                          <img src={photoUrl} alt={product.product_name} className="w-full h-full object-cover" />
+                          
+                          <div className="absolute top-3 left-3 flex gap-2">
+                            <span className={`text-xs px-3 py-1 rounded-full text-white font-semibold ${
+                              product.status === 'sold' ? 'bg-red-500' : 'bg-green-500'
+                            }`}>
+                              {product.status === 'sold' ? 'Terjual' : 'Tersedia'}
+                            </span>
+                            {product.grade && (
+                              <span className="bg-purple-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
+                                Grade {product.grade}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Show options menu
+                            }}
+                            className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-full p-2 hover:bg-white"
+                          >
+                            ⋮
+                          </button>
+                        </div>
+
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">
+                            {product.product_name}
+                          </h3>
+                          <p className="text-gray-900 font-bold text-lg">
+                            Rp{product.price?.toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
-        </button>
 
-        {/* Cancel Button */}
-        <button
-          type="button"
-          onClick={() => router.back()}
-          disabled={saving}
-          className="w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Batal
-        </button>
-      </form>
+          {activeTab === 'donations' && (
+            <div>
+              {donations.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="text-8xl mb-4">❤️</div>
+                  <p className="text-xl font-semibold text-gray-800 mb-2">Belum ada donasi</p>
+                  <p className="text-gray-600 mb-6">Mulai buat kampanye donasi untuk membantu sesama</p>
+                  <button
+                    onClick={() => router.push('/create-donation')}
+                    className="px-6 py-3 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-900"
+                  >
+                    Upload Donasi
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-6">
+                  {donations.map((donation) => {
+                    const progress = Math.min(
+                      ((donation.current_quantity || 0) / donation.target_quantity) * 100,
+                      100
+                    );
+
+                    return (
+                      <div 
+                        key={donation.donation_id} 
+                        onClick={() => router.push(`/donations/${donation.donation_id}`)}
+                        className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer"
+                      >
+                        <div className="relative aspect-video bg-gray-100">
+                          <img 
+                            src={donation.campaign_photo_url || '/placeholder.jpg'} 
+                            alt={donation.donation_target} 
+                            className="w-full h-full object-cover" 
+                          />
+                          
+                          <div className="absolute top-3 left-3">
+                            <span className={`text-xs px-3 py-1 rounded-full text-white font-semibold ${
+                              donation.donation_status === 'completed' ? 'bg-green-500' : 
+                              donation.donation_status === 'reported' ? 'bg-blue-500' : 
+                              'bg-yellow-500'
+                            }`}>
+                              {donation.donation_status === 'completed' ? 'Selesai' :
+                               donation.donation_status === 'reported' ? 'Dilaporkan' :
+                               'Berlangsung'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-800 mb-3 line-clamp-2">
+                            {donation.organization?.organization_name || donation.donation_target}
+                          </h3>
+                          
+                          <div className="mb-3">
+                            <div className="flex justify-between text-sm text-gray-600 mb-2">
+                              <span>{donation.current_quantity || 0} terkumpul</span>
+                              <span>Target: {donation.target_quantity}</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                              <div 
+                                className="bg-purple-500 h-2.5 rounded-full transition-all" 
+                                style={{ width: `${progress}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          
+                          {donation.donation_deadline && (
+                            <p className="text-xs text-gray-500">
+                              Deadline: {new Date(donation.donation_deadline).toLocaleDateString('id-ID')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

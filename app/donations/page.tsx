@@ -214,7 +214,7 @@ export default function DonationsListPage() {
                           }}
                           className="w-full px-6 py-3 rounded-lg font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
                         >
-                          📄 Lihat Laporan Pertanggungjawaban
+                          Lihat Laporan Pertanggungjawaban
                         </button>
                       ) : needReport && isCreator ? (
                         <button
