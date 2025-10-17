@@ -1,4 +1,5 @@
 // app/donations/page.tsx
+// UPDATED: 2025-10-18 - Desktop layout with side image
 "use client";
 
 import { useEffect, useState } from "react";
@@ -100,7 +101,7 @@ export default function DonationsListPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             Donasi yang Sedang Berjalan
@@ -130,113 +131,136 @@ export default function DonationsListPage() {
               return (
                 <div
                   key={donation.donation_id}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all"
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer"
+                  onClick={() => router.push(`/donations/${donation.donation_id}`)}
                 >
-                  {donation.campaign_photo_url && (
-                    <img
-                      src={donation.campaign_photo_url}
-                      alt={donation.organization.organization_name}
-                      className="w-full h-48 object-cover cursor-pointer"
-                      onClick={() => router.push(`/donations/${donation.donation_id}`)}
-                    />
-                  )}
-                  
-                  <div className="p-6">
-                    {deadlinePassed && (
-                      <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-sm text-red-800 font-medium">
-                          Batas pengumpulan donasi sudah lewat
-                        </p>
-                      </div>
-                    )}
+                  <div className="flex">
+                    {/* Content Section */}
+                    <div className="flex-1 p-6">
+                      {deadlinePassed && (
+                        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                          <p className="text-sm text-red-800 font-medium">
+                            Batas pengumpulan donasi sudah lewat
+                          </p>
+                        </div>
+                      )}
 
-                    {needReport && isCreator && (
-                      <div className={`mb-4 border rounded-lg p-3 ${
-                        reportOverdue 
-                          ? "bg-red-50 border-red-300" 
-                          : "bg-yellow-50 border-yellow-300"
-                      }`}>
-                        <p className={`text-sm font-medium ${
-                          reportOverdue ? "text-red-900" : "text-yellow-900"
+                      {needReport && isCreator && (
+                        <div className={`mb-4 border rounded-lg p-3 ${
+                          reportOverdue 
+                            ? "bg-red-50 border-red-300" 
+                            : "bg-yellow-50 border-yellow-300"
                         }`}>
-                          {reportOverdue 
-                            ? "Batas upload laporan terlewat (H+10)!" 
-                            : "Wajib upload laporan pertanggungjawaban"}
-                        </p>
-                      </div>
-                    )}
+                          <p className={`text-sm font-medium ${
+                            reportOverdue ? "text-red-900" : "text-yellow-900"
+                          }`}>
+                            {reportOverdue 
+                              ? "Batas upload laporan terlewat (H+10)!" 
+                              : "Wajib upload laporan pertanggungjawaban"}
+                          </p>
+                        </div>
+                      )}
 
-                    {donation.report_submitted_at && (
-                      <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
-                        <p className="text-sm text-green-800 font-medium">
-                          Laporan sudah disubmit
-                        </p>
-                      </div>
-                    )}
+                      {donation.report_submitted_at && (
+                        <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
+                          <p className="text-sm text-green-800 font-medium">
+                            ✓ Laporan sudah disubmit
+                          </p>
+                        </div>
+                      )}
 
-                    <h3 
-                      onClick={() => router.push(`/donations/${donation.donation_id}`)}
-                      className="text-xl font-bold text-gray-800 mb-2 cursor-pointer hover:text-green-600 transition-colors"
-                    >
-                      {donation.organization.organization_name}
-                    </h3>
-                    <p className="text-gray-600 mb-1">
-                      Target: {donation.donation_target}
-                    </p>
-                    <p className="text-sm text-gray-500 mb-1">
-                      Deadline: {formatDate(donation.donation_deadline)}
-                    </p>
-                    <p className="text-sm text-gray-500 mb-2">
-                      Tanggal Kegiatan: {formatDate(donation.event_date)}
-                    </p>
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-4">
-                      {donation.donation_desc}
-                    </p>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">
+                        {donation.organization.organization_name}
+                      </h3>
+                      
+                      <p className="text-gray-600 mb-1">
+                        Target: {donation.donation_target}
+                      </p>
+                      
+                      <p className="text-sm text-gray-500 mb-1">
+                        Deadline: {formatDate(donation.donation_deadline)}
+                      </p>
+                      
+                      <p className="text-sm text-gray-500 mb-3">
+                        Tanggal Kegiatan: {formatDate(donation.event_date)}
+                      </p>
 
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm text-gray-600 mb-2">
-                        <span>
-                          {donation.current_quantity} / {donation.target_quantity} pakaian
-                        </span>
-                        <span className="font-semibold">{progress}% terkumpul</span>
+                      <p className="text-sm text-gray-500 line-clamp-2 mb-4">
+                        {donation.donation_desc}
+                      </p>
+
+                      {/* Progress Bar */}
+                      <div className="mb-4">
+                        <div className="flex justify-between text-sm text-gray-600 mb-2">
+                          <span>
+                            {donation.current_quantity} / {donation.target_quantity} pakaian
+                          </span>
+                          <span className="font-semibold">{progress}% terkumpul</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-green-500 h-3 rounded-full transition-all"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-green-500 h-3 rounded-full transition-all"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
+
+                      {/* Action Buttons */}
+                      {donation.report_submitted_at ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/donations/${donation.donation_id}/view-report`);
+                          }}
+                          className="w-full px-6 py-3 rounded-lg font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
+                        >
+                          📄 Lihat Laporan Pertanggungjawaban
+                        </button>
+                      ) : needReport && isCreator ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/donations/${donation.donation_id}/report`);
+                          }}
+                          className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
+                            reportOverdue
+                              ? "bg-red-600 hover:bg-red-700"
+                              : "bg-yellow-600 hover:bg-yellow-700"
+                          } text-white`}
+                        >
+                          Upload Laporan Pertanggungjawaban
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/donations/${donation.donation_id}/contribute`);
+                          }}
+                          disabled={deadlinePassed}
+                          className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
+                            deadlinePassed
+                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              : "bg-green-600 text-white hover:bg-green-700"
+                          }`}
+                        >
+                          {deadlinePassed ? "Pengumpulan Sudah Ditutup" : "Kontribusi Sekarang"}
+                        </button>
+                      )}
                     </div>
 
-                    {needReport && isCreator && !donation.report_submitted_at ? (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/donations/${donation.donation_id}/report`);
+                    {/* Image Section - Faded Background */}
+                    {donation.campaign_photo_url && (
+                      <div 
+                        className="w-80 flex-shrink-0 relative"
+                        style={{
+                          backgroundImage: `linear-gradient(to left, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 100%), url(${donation.campaign_photo_url})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          backgroundRepeat: 'no-repeat'
                         }}
-                        className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
-                          reportOverdue
-                            ? "bg-red-600 hover:bg-red-700"
-                            : "bg-yellow-600 hover:bg-yellow-700"
-                        } text-white`}
                       >
-                        Upload Laporan Pertanggungjawaban
-                      </button>
-                    ) : (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/donations/${donation.donation_id}/contribute`);
-                        }}
-                        disabled={deadlinePassed}
-                        className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
-                          deadlinePassed
-                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            : "bg-green-600 text-white hover:bg-green-700"
-                        }`}
-                      >
-                        {deadlinePassed ? "Pengumpulan Sudah Ditutup" : "Kontribusi Sekarang"}
-                      </button>
+                        <div className="absolute inset-0 bg-gradient-to-l from-transparent to-white/40"></div>
+                      </div>
                     )}
                   </div>
                 </div>

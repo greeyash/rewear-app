@@ -34,12 +34,20 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    // Map organizations to donations
+    // Map organizations to donations dan sort by status
     const orgsMap = new Map(orgsData.map(org => [org.organization_id, org]));
-    const donations = donationsData.map(donation => ({
+    let donations = donationsData.map(donation => ({
       ...donation,
       organization: orgsMap.get(donation.organization_id) || { organization_name: "Unknown" }
     }));
+
+    // Sort: in progress → completed → reported
+    const statusOrder = { "in progress": 1, "completed": 2, "reported": 3 };
+    donations.sort((a, b) => {
+      const orderA = statusOrder[a.donation_status as keyof typeof statusOrder] || 999;
+      const orderB = statusOrder[b.donation_status as keyof typeof statusOrder] || 999;
+      return orderA - orderB;
+    });
 
     return NextResponse.json({
       success: true,

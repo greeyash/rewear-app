@@ -4,12 +4,12 @@ import { NextResponse } from "next/server";
 
 export async function POST(
   req: Request,
-  { params }: { params: { donation_id: string } }
+  { params }: { params: Promise<{ donation_id: string }> }
 ) {
   try {
     const formData = await req.formData();
-    
-    const donationId = params.donation_id;
+    const { donation_id } = await params;
+    const donationId = donation_id;
     const photo = formData.get("photo") as File;
     const quantity = formData.get("quantity") as string;
     const userId = formData.get("userId") as string;
