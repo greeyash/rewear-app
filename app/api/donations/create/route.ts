@@ -4,22 +4,22 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const formData = await req.formData();
     
-    const {
-      userId,
-      organizationName,
-      organizationNPWP,
-      campaignName,
-      donationTarget,
-      description,
-      targetQuantity,
-      eventDate
-    } = body;
+    const photo = formData.get("photo") as File;
+    const userId = formData.get("userId") as string;
+    const organizationName = formData.get("organizationName") as string;
+    const organizationNPWP = formData.get("organizationNPWP") as string;
+    const campaignName = formData.get("campaignName") as string;
+    const donationTarget = formData.get("donationTarget") as string;
+    const description = formData.get("description") as string;
+    const targetQuantity = formData.get("targetQuantity") as string;
+    const eventDate = formData.get("eventDate") as string;
+    const donationDeadline = formData.get("donationDeadline") as string;
 
-    console.log("Received data:", body);
+    console.log("Received data:", { userId, organizationName, campaignName });
 
-    if (!userId || !organizationName || !organizationNPWP || !campaignName || !targetQuantity || !eventDate) {
+    if (!photo || !userId || !organizationName || !organizationNPWP || !campaignName || !targetQuantity || !eventDate || !donationDeadline) {
       return NextResponse.json({
         success: false,
         error: "Data tidak lengkap"
@@ -27,14 +27,22 @@ export async function POST(req: Request) {
     }
 
     // Validasi tanggal
-    const selectedDate = new Date(eventDate);
+    const deadline = new Date(donationDeadline);
+    const event = new Date(eventDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (selectedDate < today) {
+    if (event < today) {
       return NextResponse.json({
         success: false,
         error: "Tanggal pelaksanaan harus di masa depan"
+      }, { status: 400 });
+    }
+
+    if (deadline >= event) {
+      return NextResponse.json({
+        success: false,
+        error: "Deadline harus sebelum tanggal pelaksanaan"
       }, { status: 400 });
     }
 

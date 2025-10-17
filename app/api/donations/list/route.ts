@@ -4,11 +4,11 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    // Fetch donations
+    // Fetch donations dengan urutan status
     const { data: donationsData, error: donationsError } = await supabase
       .from("donations")
       .select("*")
-      .eq("donation_status", "in progress")
+      .in("donation_status", ["in progress", "completed", "reported"])
       .order("donation_id", { ascending: false });
 
     if (donationsError) {

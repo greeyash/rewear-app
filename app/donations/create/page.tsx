@@ -7,16 +7,31 @@ import { useRouter } from "next/navigation";
 export default function CreateDonationPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
+    photo: null as File | null,
     organizationName: "",
     organizationNPWP: "",
     campaignName: "",
     donationTarget: "",
     description: "",
     targetQuantity: "",
-    eventDate: ""
+    eventDate: "",
+    donationDeadline: ""
   });
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData({ ...formData, photo: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -32,8 +47,18 @@ export default function CreateDonationPage() {
     try {
       const userId = "1";
 
-      if (!formData.organizationName || !formData.campaignName || !formData.targetQuantity || !formData.eventDate) {
+      if (!formData.organizationName || !formData.campaignName || !formData.targetQuantity || !formData.eventDate || !formData.donationDeadline || !formData.photo) {
         alert("Mohon lengkapi semua field yang wajib diisi");
+        setIsLoading(false);
+        return;
+      }
+
+      // Validasi tanggal deadline harus sebelum tanggal event
+      const deadline = new Date(formData.donationDeadline);
+      const eventDate = new Date(formData.eventDate);
+      
+      if (deadline >= eventDate) {
+        alert("Tanggal deadline pengumpulan harus sebelum tanggal pelaksanaan kegiatan");
         setIsLoading(false);
         return;
       }
@@ -49,15 +74,27 @@ export default function CreateDonationPage() {
         return;
       }
 
+      if (deadline < today) {
+        alert("Tanggal deadline harus di masa depan");
+        setIsLoading(false);
+        return;
+      }
+
+      const submitData = new FormData();
+      submitData.append("photo", formData.photo);
+      submitData.append("userId", userId);
+      submitData.append("organizationName", formData.organizationName);
+      submitData.append("organizationNPWP", formData.organizationNPWP);
+      submitData.append("campaignName", formData.campaignName);
+      submitData.append("donationTarget", formData.donationTarget);
+      submitData.append("description", formData.description);
+      submitData.append("targetQuantity", formData.targetQuantity);
+      submitData.append("eventDate", formData.eventDate);
+      submitData.append("donationDeadline", formData.donationDeadline);
+
       const response = await fetch("/api/donations/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          ...formData
-        }),
+        body: submitData,
       });
 
       const result = await response.json();
@@ -88,6 +125,48 @@ export default function CreateDonationPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-8">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Foto Kegiatan
+              </h2>
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-green-500 transition-colors">
+                {photoPreview ? (
+                  <div className="relative">
+                    <img
+                      src={photoPreview}
+                      alt="Preview"
+                      className="max-h-64 mx-auto rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhotoPreview(null);
+                        setFormData({ ...formData, photo: null });
+                      }}
+                      className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    >
+                      Hapus Foto
+                    </button>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer block">
+                    <div className="text-6xl mb-2">+</div>
+                    <p className="text-gray-600 mb-2">Klik untuk upload foto</p>
+                    <input
+                      type="file"
+                      name="photo"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+              {!photoPreview && (
+                <p className="text-xs text-red-500 mt-2">* Foto kegiatan wajib diupload</p>
+              )}
+            </div>
+
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
                 Info Organisasi
@@ -189,6 +268,24 @@ export default function CreateDonationPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Batas Waktu Pengumpulan Donasi *
+                  </label>
+                  <input
+                    type="date"
+                    name="donationDeadline"
+                    value={formData.donationDeadline}
+                    onChange={handleInputChange}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Deadline harus sebelum tanggal pelaksanaan kegiatan
+                  </p>
                 </div>
 
                 <div>

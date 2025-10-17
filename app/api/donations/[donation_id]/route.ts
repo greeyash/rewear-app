@@ -4,10 +4,11 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { donation_id: string } }
+  { params }: { params: Promise<{ donation_id: string }> }
 ) {
   try {
-    const donationId = params.donation_id;
+    const { donation_id } = await params;
+    const donationId = donation_id;
 
     // Fetch donation
     const { data: donationData, error: donationError } = await supabase

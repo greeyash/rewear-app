@@ -12,6 +12,8 @@ interface Donation {
   current_quantity: number;
   donation_status: string;
   event_date: string;
+  donation_deadline: string;
+  campaign_photo_url: string;
   creator_id: number;
   report_submitted_at: string | null;
   organization: {
@@ -49,11 +51,11 @@ export default function DonationsListPage() {
     return Math.min(Math.round((current / target) * 100), 100);
   };
 
-  const isEventPassed = (eventDate: string) => {
-    const event = new Date(eventDate);
+  const isDeadlinePassed = (deadline: string) => {
+    const deadlineDate = new Date(deadline);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return event < today;
+    return deadlineDate < today;
   };
 
   const formatDate = (dateString: string) => {
@@ -63,6 +65,29 @@ export default function DonationsListPage() {
       month: 'long',
       year: 'numeric'
     });
+  };
+
+  const needsReport = (donation: Donation) => {
+    if (donation.report_submitted_at) return false;
+    if (donation.donation_status !== "completed") return false;
+    
+    const eventDate = new Date(donation.event_date);
+    const today = new Date();
+    const diffTime = today.getTime() - eventDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays > 0;
+  };
+
+  const isReportOverdue = (donation: Donation) => {
+    if (donation.report_submitted_at) return false;
+    
+    const eventDate = new Date(donation.event_date);
+    const today = new Date();
+    const diffTime = today.getTime() - eventDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays > 10;
   };
 
   if (isLoading) {
@@ -96,38 +121,77 @@ export default function DonationsListPage() {
                 donation.current_quantity,
                 donation.target_quantity
               );
-              const eventPassed = isEventPassed(donation.event_date);
+              const deadlinePassed = isDeadlinePassed(donation.donation_deadline);
+              const needReport = needsReport(donation);
+              const reportOverdue = isReportOverdue(donation);
+              const currentUserId = "1";
+              const isCreator = donation.creator_id === parseInt(currentUserId);
 
               return (
                 <div
                   key={donation.donation_id}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all"
                 >
+                  {donation.campaign_photo_url && (
+                    <img
+                      src={donation.campaign_photo_url}
+                      alt={donation.organization.organization_name}
+                      className="w-full h-48 object-cover cursor-pointer"
+                      onClick={() => router.push(`/donations/${donation.donation_id}`)}
+                    />
+                  )}
+                  
                   <div className="p-6">
-                    {eventPassed && (
+                    {deadlinePassed && (
                       <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
                         <p className="text-sm text-red-800 font-medium">
-                          Kegiatan sudah berlangsung. Donasi tidak dapat dilakukan lagi.
+                          Batas pengumpulan donasi sudah lewat
                         </p>
                       </div>
                     )}
 
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">
-                          {donation.organization.organization_name}
-                        </h3>
-                        <p className="text-gray-600 mb-1">
-                          Target: {donation.donation_target}
-                        </p>
-                        <p className="text-sm text-gray-500 mb-2">
-                          Tanggal Kegiatan: {formatDate(donation.event_date)}
-                        </p>
-                        <p className="text-sm text-gray-500 line-clamp-2">
-                          {donation.donation_desc}
+                    {needReport && isCreator && (
+                      <div className={`mb-4 border rounded-lg p-3 ${
+                        reportOverdue 
+                          ? "bg-red-50 border-red-300" 
+                          : "bg-yellow-50 border-yellow-300"
+                      }`}>
+                        <p className={`text-sm font-medium ${
+                          reportOverdue ? "text-red-900" : "text-yellow-900"
+                        }`}>
+                          {reportOverdue 
+                            ? "Batas upload laporan terlewat (H+10)!" 
+                            : "Wajib upload laporan pertanggungjawaban"}
                         </p>
                       </div>
-                    </div>
+                    )}
+
+                    {donation.report_submitted_at && (
+                      <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
+                        <p className="text-sm text-green-800 font-medium">
+                          Laporan sudah disubmit
+                        </p>
+                      </div>
+                    )}
+
+                    <h3 
+                      onClick={() => router.push(`/donations/${donation.donation_id}`)}
+                      className="text-xl font-bold text-gray-800 mb-2 cursor-pointer hover:text-green-600 transition-colors"
+                    >
+                      {donation.organization.organization_name}
+                    </h3>
+                    <p className="text-gray-600 mb-1">
+                      Target: {donation.donation_target}
+                    </p>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Deadline: {formatDate(donation.donation_deadline)}
+                    </p>
+                    <p className="text-sm text-gray-500 mb-2">
+                      Tanggal Kegiatan: {formatDate(donation.event_date)}
+                    </p>
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-4">
+                      {donation.donation_desc}
+                    </p>
 
                     <div className="mb-4">
                       <div className="flex justify-between text-sm text-gray-600 mb-2">
@@ -144,19 +208,36 @@ export default function DonationsListPage() {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() =>
-                        router.push(`/donations/${donation.donation_id}/contribute`)
-                      }
-                      disabled={eventPassed}
-                      className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
-                        eventPassed
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-green-600 text-white hover:bg-green-700"
-                      }`}
-                    >
-                      {eventPassed ? "Kegiatan Sudah Berlangsung" : "Kontribusi Sekarang"}
-                    </button>
+                    {needReport && isCreator && !donation.report_submitted_at ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/donations/${donation.donation_id}/report`);
+                        }}
+                        className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
+                          reportOverdue
+                            ? "bg-red-600 hover:bg-red-700"
+                            : "bg-yellow-600 hover:bg-yellow-700"
+                        } text-white`}
+                      >
+                        Upload Laporan Pertanggungjawaban
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/donations/${donation.donation_id}/contribute`);
+                        }}
+                        disabled={deadlinePassed}
+                        className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
+                          deadlinePassed
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-green-600 text-white hover:bg-green-700"
+                        }`}
+                      >
+                        {deadlinePassed ? "Pengumpulan Sudah Ditutup" : "Kontribusi Sekarang"}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
