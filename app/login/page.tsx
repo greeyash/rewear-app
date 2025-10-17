@@ -36,11 +36,14 @@ export default function LoginPage() {
         const loginResult = await loginResponse.json();
 
         if (loginResult.success) {
-          // Simpan user ID ke localStorage atau session
-          localStorage.setItem('userId', loginResult.user_id);
-          localStorage.setItem('email', email);
+          // PENTING: Simpan user ID sebagai string
+          localStorage.setItem('userId', String(loginResult.user_id));
+          localStorage.setItem('email', loginResult.email);
           
-          // Redirect ke dashboard atau home
+          console.log('✅ Login success! User ID:', loginResult.user_id);
+          console.log('📦 Saved to localStorage:', localStorage.getItem('userId'));
+          
+          // Redirect ke home
           router.push('/home');
         } else {
           setError(loginResult.error || 'Password salah');

@@ -108,7 +108,7 @@ export async function PATCH(
     const validStatuses = ['unsold', 'sold'];
     if (body.status && !validStatuses.includes(body.status)) {
       console.warn(`Invalid status: ${body.status}. Using 'unsold' instead.`);
-      body.status = 'unsold'; // Default ke unsold jika status invalid
+      body.status = 'unsold';
     }
 
     const { data, error } = await supabase

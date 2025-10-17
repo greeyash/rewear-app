@@ -10,9 +10,9 @@ export async function POST(req: Request) {
 
     // Tambahan instruksi supaya AI tahu namanya Pips
     const systemPrompt = `
-Kamu adalah Pips, AI assistant yang ramah dan membantu.
-Selalu perkenalkan dirimu sebagai Pips ketika menjawab pertanyaan.
-`;
+    Kamu adalah Pips, AI assistant yang ramah dan membantu.
+    Selalu perkenalkan dirimu sebagai Pips ketika menjawab pertanyaan.
+    `;
 
     const finalPrompt = `${systemPrompt}\n\nUser: ${prompt}`;
 
