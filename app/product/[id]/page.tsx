@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface Product {
   product_id: number;
@@ -183,25 +184,30 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Bar */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Logo */}
-            <button 
+            <button
               onClick={() => router.push('/')}
-              className="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              ThriftHub
+              <Image
+                src="/assets/logo-rewearr.png"
+                alt="ReWear Logo"
+                width={140}
+                height={40}
+                className="object-contain"
+              />
             </button>
 
             {/* Search Bar */}
-            <form onSubmit={handleSearch} className="flex justify-center w-full">
+            <form onSubmit={handleSearch} className="flex justify-center flex-1 max-w-3xl">
               <div
-                className="relative flex items-center"
+                className="relative flex items-center w-full"
                 style={{
-                  width: '1100px',
+                  maxWidth: '1100px',
                   height: '50px',
-                  flexShrink: 0,
                   borderRadius: '100px',
                   border: '1px solid #868686',
                   background: '#FFF',
@@ -239,7 +245,7 @@ export default function ProductDetailPage() {
             {/* Cart Button */}
             <button
               onClick={() => router.push('/cart')}
-              className="w-[50px] h-[50px] flex items-center justify-center transition-transform hover:scale-105"
+              className="w-[50px] h-[50px] flex items-center justify-center transition-transform hover:scale-105 flex-shrink-0"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -377,20 +383,19 @@ export default function ProductDetailPage() {
 
             {/* Category Label */}
             <div
-            style={{
-              color: "#868686",
-              fontFamily: '"Plus Jakarta Sans", sans-serif',
-              fontSize: "22px",
-              fontStyle: "normal",
-              fontWeight: 500,
-              lineHeight: "normal",
-              letterSpacing: "-0.43px",
-            }}
-            className="mb-2"
-          >
-            {product.category || "Uncategorized"}
-          </div>
-
+              style={{
+                color: "#868686",
+                fontFamily: '"Plus Jakarta Sans", sans-serif',
+                fontSize: "22px",
+                fontStyle: "normal",
+                fontWeight: 500,
+                lineHeight: "normal",
+                letterSpacing: "-0.43px",
+              }}
+              className="mb-2"
+            >
+              {product.category || "Uncategorized"}
+            </div>
 
             {/* Product Name */}
             <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.product_name}</h1>
@@ -423,23 +428,22 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-                    {/* Price */}
-          <div className="mb-8">
-            <h1
-              style={{
-                color: "#2D322D",
-                fontFamily: '"Plus Jakarta Sans", sans-serif',
-                fontSize: "40px",
-                fontStyle: "normal",
-                fontWeight: 800,
-                lineHeight: "normal",
-                letterSpacing: "-0.43px",
-              }}
-            >
-              Rp{Number(product.price).toLocaleString("id-ID")},00
-            </h1>
-          </div>
-
+            {/* Price */}
+            <div className="mb-8">
+              <h1
+                style={{
+                  color: "#2D322D",
+                  fontFamily: '"Plus Jakarta Sans", sans-serif',
+                  fontSize: "40px",
+                  fontStyle: "normal",
+                  fontWeight: 800,
+                  lineHeight: "normal",
+                  letterSpacing: "-0.43px",
+                }}
+              >
+                Rp{Number(product.price).toLocaleString("id-ID")},00
+              </h1>
+            </div>
 
             <div className="flex gap-3 mb-8">
               <button
@@ -536,7 +540,7 @@ export default function ProductDetailPage() {
                       letterSpacing: "-0.43px",
                     }}
                   >
-                    {product.seller.name}
+                    {product.seller.name || product.seller.user_name}
                   </div>
 
                   <div
@@ -550,7 +554,7 @@ export default function ProductDetailPage() {
                       letterSpacing: "-0.43px",
                     }}
                   >
-                    {product.seller.user_name}
+                    @{product.seller.user_name}
                   </div>
 
                   {/* Rating */}
@@ -593,7 +597,7 @@ export default function ProductDetailPage() {
                       fontSize: "14px",
                     }}
                   >
-                    {product.seller.location}
+                    {product.seller.location || "Jakarta"}
                   </div>
                 </div>
 

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -171,12 +173,16 @@ export default function SignUpPage() {
         <div className="bg-white rounded-3xl shadow-lg p-8">
           {/* Logo/Title */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-[#66bb6a] rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">ThriftHub</h1>
+            <div className=" flex items-center justify-center mx-auto mb-4">
+                <Image
+                 src="/assets/logo-rewearr.png"
+                  alt="ReWear Logo"
+                 width={140}
+                  height={40}
+                  className="object-contain"
+                                          />
+                        </div>
+                          <p className="text-gray-600 text-sm mt-1">Beli pakaian bekas berkualitas</p>
             <p className="text-gray-600 text-sm mt-1">
               {stage === 'register' ? 'Daftar akun baru' : 'Lengkapi profil Anda'}
             </p>
