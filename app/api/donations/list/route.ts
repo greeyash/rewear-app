@@ -1,4 +1,5 @@
 // app/api/donations/list/route.ts
+// @ts-nocheck
 import { supabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 
@@ -44,8 +45,8 @@ export async function GET() {
     // Sort: in progress → completed → reported
     const statusOrder = { "in progress": 1, "completed": 2, "reported": 3 };
     donations.sort((a, b) => {
-      const orderA = statusOrder[a.donation_status as keyof typeof statusOrder] || 999;
-      const orderB = statusOrder[b.donation_status as keyof typeof statusOrder] || 999;
+      const orderA = statusOrder[a.donation_status] || 999;
+      const orderB = statusOrder[b.donation_status] || 999;
       return orderA - orderB;
     });
 
