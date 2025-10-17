@@ -157,21 +157,21 @@ export default function SellClothingForm() {
           <PhotoUploadBox
             type="front"
             title="Tampak depan*"
-            description="Ambil foto seluruh pakaian dari depan. Pastikan rata, tidak terlipat, dan pencahayaan alami. Tips: Gunakan background netral (putih/krem muda) agar Allahh mudah membaca tekstur."
+            description="Ambil foto seluruh pakaian dari depan. Pastikan rata, tidak terlipat, dan pencahayaan alami. Tips: Gunakan background netral (putih/krem muda) agar AI mudah membaca tekstur."
             photo={photos.front}
           />
 
           <PhotoUploadBox
             type="back"
             title="Tampak belakang*"
-            description="Foto sisi belakang pakaian. Cek bagian leher, label, atau kentutan diukir. Akan membantu mengidentifikasi kondisi depan-belakang buatan menutuang trade."
+            description="Foto sisi belakang pakaian. Cek bagian leher, label, atau kerutan di akhir. AI akan membantu mengidentifikasi kondisi depan-belakang untuk menentukan grade."
             photo={photos.back}
           />
 
           <PhotoUploadBox
             type="detail"
             title="Foto Close-up Area Detail / Cacat*"
-            description="Ambil foto jarak dekat (10-15 cm) untuk menampiikan tekstur dan kondisi riaya pakaian. Fokus pada bagian yang rusak atau bermoda (noda, sobek, keriring lepas). Jika tidak ada cacat, unggah foto detail kain atau sistem dengan jelas untuk lebih akurat."
+            description="Ambil foto jarak dekat (10-15 cm) untuk menampiikan tekstur dan kondisi nyata pakaian. Fokus pada bagian yang rusak atau bernoda (noda, sobek, kancing lepas). Jika tidak ada cacat, unggah foto detail kain agar sistem dapat menilai lebih akurat."
             photo={photos.detail}
           />
 
