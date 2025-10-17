@@ -90,7 +90,12 @@ export default function TransactionSuccessPage() {
 
         {/* Impact Card */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
-          <div className="bg-gradient-to-r from-green-400 to-green-500 px-6 py-4">
+         <div
+            style={{
+                background: "linear-gradient(90deg, #9C83F3 0%, #BBADEB 100%)",
+            }}
+            className="px-6 py-4 rounded-xl"
+            >
             <h2 className="text-white font-semibold text-lg text-center">
               Dampak dari Aksimu
             </h2>

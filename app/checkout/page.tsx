@@ -42,9 +42,14 @@ export default function CheckoutPage() {
         return;
       }
 
+      console.log('Loading checkout data for user:', userId);
+
       // Get user address
       const userResponse = await fetch(`/api/users/${userId}`);
       const userData = await userResponse.json();
+      
+      console.log('User data:', userData);
+      
       if (userData.success) {
         setUserAddress({
           user_name: userData.user.user_name,
@@ -57,10 +62,15 @@ export default function CheckoutPage() {
       const productId = searchParams.get('product_id');
       const quantity = searchParams.get('quantity');
 
+      console.log('URL params - productId:', productId, 'quantity:', quantity);
+
       if (productId && quantity) {
+        console.log('Direct buy mode');
         // Direct buy from product detail
         const response = await fetch(`/api/products/${productId}`);
         const result = await response.json();
+        
+        console.log('Product result:', result);
         
         if (result.success) {
           const product = result.product;
@@ -78,6 +88,8 @@ export default function CheckoutPage() {
       } else {
         // Checkout from cart
         const cartItemIds = searchParams.get('items');
+        console.log('Cart mode - items:', cartItemIds);
+        
         if (!cartItemIds) {
           alert('Tidak ada item untuk checkout');
           router.back();
@@ -87,10 +99,17 @@ export default function CheckoutPage() {
         const response = await fetch(`/api/cart?user_id=${userId}`);
         const result = await response.json();
         
+        console.log('Cart result:', result);
+        
         if (result.success) {
           const selectedIds = cartItemIds.split(',').map(id => parseInt(id));
+          console.log('Selected IDs:', selectedIds);
+          
           const selectedItems = result.items
-            .filter((item: any) => selectedIds.includes(item.cart_item_id))
+            .filter((item: any) => {
+              console.log('Checking item:', item.cart_item_id, 'in', selectedIds);
+              return selectedIds.includes(item.cart_item_id);
+            })
             .map((item: any) => ({
               cart_item_id: item.cart_item_id,
               product_id: item.products.product_id,
@@ -103,6 +122,7 @@ export default function CheckoutPage() {
               seller_id: item.products.user_id
             }));
           
+          console.log('Selected items:', selectedItems);
           setItems(selectedItems);
         }
       }
