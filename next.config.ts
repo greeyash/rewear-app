@@ -1,10 +1,13 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
   eslint: {
-    ignoreDuringBuilds: true, // 🚀 biar lint error ga ngeblok build
+
+    ignoreDuringBuilds: true,
   },
-  typescript: {
-    ignoreBuildErrors: true, // 🚀 biar TypeScript error (kayak any) ga blok build juga
+  images: {
+
+    unoptimized: true,
   },
 };
 
