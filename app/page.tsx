@@ -42,6 +42,8 @@ export default function Home() {
   const [donations, setDonations] = useState<Donation[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userData, setUserData] = useState<any>(null);
+  const [isMounted, setIsMounted] = useState(false);
   
 
   // Hero slides - hanya 2 slide
@@ -57,8 +59,15 @@ export default function Home() {
   ];
 
   useEffect(() => {
+    // Set mounted to true
+    setIsMounted(true);
+    
+    // Fetch data
     fetchDonations();
     fetchProducts();
+    
+    // Load user data from localStorage
+    loadUserData();
     
     // Auto slide hero
     const interval = setInterval(() => {
@@ -67,6 +76,37 @@ export default function Home() {
     
     return () => clearInterval(interval);
   }, []);
+
+  const loadUserData = () => {
+    console.log('🚀 loadUserData called');
+    console.log('🌐 window defined?', typeof window !== 'undefined');
+    
+    if (typeof window !== 'undefined') {
+      const userId = localStorage.getItem('userId');
+      const userName = localStorage.getItem('userName');
+      const profilePhotoUrl = localStorage.getItem('profilePhotoUrl');
+      
+      console.log('🔍 Homepage - Checking localStorage:', { 
+        userId, 
+        userName, 
+        profilePhotoUrl 
+      });
+      
+      if (userId && userName) {
+        const userData = { 
+          user_name: userName,
+          profile_photo_url: profilePhotoUrl 
+        };
+        console.log('✅ Setting user data:', userData);
+        setUserData(userData);
+        console.log('✅ User data loaded on homepage');
+      } else {
+        console.log('❌ No user data in localStorage');
+        console.log('   - userId:', userId);
+        console.log('   - userName:', userName);
+      }
+    }
+  };
 
   const fetchDonations = async () => {
     try {
@@ -95,8 +135,8 @@ export default function Home() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchInput.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchInput)}`);
+    if (searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
     } else {
       router.push("/products");
     }
@@ -175,48 +215,81 @@ export default function Home() {
                   </div>
                 </form>
     
-                {/* Cart Button */}
-                <button
-                  onClick={() => router.push('/cart')}
-                  className="w-[50px] h-[50px] flex items-center justify-center transition-transform hover:scale-105 flex-shrink-0"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="50"
-                    height="50"
-                    viewBox="0 0 50 50"
-                    fill="none"
+                {/* Right Side Actions */}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  {/* Cart Button */}
+                  <button
+                    onClick={() => router.push('/cart')}
+                    className="w-[50px] h-[50px] flex items-center justify-center transition-transform hover:scale-105"
                   >
-                    <circle
-                      cx="25"
-                      cy="25"
-                      r="24.5"
-                      fill="url(#paint0_linear_398_102)"
-                      fillOpacity="0.9"
-                      stroke="white"
-                    />
-                    <path
-                      d="M13 15H14.696C15.1859 15 15.6036 15.3548 15.6829 15.8382L16.1818 18.8824M16.1818 18.8824L17.8161 28.8529C17.9746 29.8197 18.8101 30.5294 19.7898 30.5294H30.392C31.3718 30.5294 32.2072 29.8197 32.3657 28.8529L33.6191 21.2059C33.8187 19.9884 32.8792 18.8824 31.6455 18.8824H16.1818ZM21.2727 33.1176C20.2184 33.1176 19.3636 33.9867 19.3636 35.0588C19.3636 36.1309 20.2184 37 21.2727 37C22.3271 37 23.1818 36.1309 23.1818 35.0588C23.1818 33.9867 22.3271 33.1176 21.2727 33.1176ZM27 35.0588C27 33.9867 27.8547 33.1176 28.9091 33.1176C29.9635 33.1176 30.8182 33.9867 30.8182 35.0588C30.8182 36.1309 29.9635 37 28.9091 37C27.8547 37 27 36.1309 27 35.0588Z"
-                      stroke="#2D322D"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <defs>
-                      <linearGradient
-                        id="paint0_linear_398_102"
-                        x1="4.41176"
-                        y1="14.7059"
-                        x2="46.3235"
-                        y2="37.5"
-                        gradientUnits="userSpaceOnUse"
-                      >
-                        <stop stopColor="white" stopOpacity="0.5" />
-                        <stop offset="0.5" stopColor="white" />
-                        <stop offset="1" stopColor="white" stopOpacity="0.4" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="50"
+                      height="50"
+                      viewBox="0 0 50 50"
+                      fill="none"
+                    >
+                      <circle
+                        cx="25"
+                        cy="25"
+                        r="24.5"
+                        fill="url(#paint0_linear_398_102)"
+                        fillOpacity="0.9"
+                        stroke="white"
+                      />
+                      <path
+                        d="M13 15H14.696C15.1859 15 15.6036 15.3548 15.6829 15.8382L16.1818 18.8824M16.1818 18.8824L17.8161 28.8529C17.9746 29.8197 18.8101 30.5294 19.7898 30.5294H30.392C31.3718 30.5294 32.2072 29.8197 32.3657 28.8529L33.6191 21.2059C33.8187 19.9884 32.8792 18.8824 31.6455 18.8824H16.1818ZM21.2727 33.1176C20.2184 33.1176 19.3636 33.9867 19.3636 35.0588C19.3636 36.1309 20.2184 37 21.2727 37C22.3271 37 23.1818 36.1309 23.1818 35.0588C23.1818 33.9867 22.3271 33.1176 21.2727 33.1176ZM27 35.0588C27 33.9867 27.8547 33.1176 28.9091 33.1176C29.9635 33.1176 30.8182 33.9867 30.8182 35.0588C30.8182 36.1309 29.9635 37 28.9091 37C27.8547 37 27 36.1309 27 35.0588Z"
+                        stroke="#2D322D"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <defs>
+                        <linearGradient
+                          id="paint0_linear_398_102"
+                          x1="4.41176"
+                          y1="14.7059"
+                          x2="46.3235"
+                          y2="37.5"
+                          gradientUnits="userSpaceOnUse"
+                        >
+                          <stop stopColor="white" stopOpacity="0.5" />
+                          <stop offset="0.5" stopColor="white" />
+                          <stop offset="1" stopColor="white" stopOpacity="0.4" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </button>
+
+                  {/* Profile Button - Only show when mounted */}
+                  {isMounted && (
+                    <>
+                      {userData ? (
+                        <button
+                          onClick={() => router.push('/profile')}
+                          className="w-[50px] h-[50px] rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold text-lg transition-transform hover:scale-105 shadow-md hover:shadow-lg overflow-hidden"
+                          title={`Profile: ${userData.user_name}`}
+                        >
+                          {userData.profile_photo_url ? (
+                            <img 
+                              src={userData.profile_photo_url} 
+                              alt={userData.user_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            userData.user_name?.charAt(0).toUpperCase() || 'U'
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => router.push('/login')}
+                          className="px-6 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-full font-semibold transition-colors"
+                        >
+                          Masuk
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </nav>

@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -19,15 +18,15 @@ export default function LoginPage() {
 
     try {
       // Cek apakah email terdaftar
-      const response = await fetch('/api/auth/check-email', {
+      const checkResponse = await fetch('/api/auth/check-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
 
-      const result = await response.json();
+      const checkResult = await checkResponse.json();
 
-      if (result.exists) {
+      if (checkResult.exists) {
         // Email sudah terdaftar - cek password
         const loginResponse = await fetch('/api/auth/login', {
           method: 'POST',
@@ -37,25 +36,41 @@ export default function LoginPage() {
 
         const loginResult = await loginResponse.json();
 
+        console.log('📥 Login API Response:', loginResult);
+
         if (loginResult.success) {
-          // PENTING: Simpan user ID sebagai string
+          // Simpan semua data user ke localStorage
           localStorage.setItem('userId', String(loginResult.user_id));
           localStorage.setItem('email', loginResult.email);
+          localStorage.setItem('userName', loginResult.user_name || email.split('@')[0]);
           
-          console.log('Login success! User ID:', loginResult.user_id);
-          console.log('Saved to localStorage:', localStorage.getItem('userId'));
+          if (loginResult.profile_photo_url) {
+            localStorage.setItem('profilePhotoUrl', loginResult.profile_photo_url);
+          }
           
-          // Redirect ke home
-          router.push('/home');
+          // Debug log untuk memastikan data tersimpan
+          console.log('✅ Login success! Data saved to localStorage:');
+          console.log('   - User ID:', localStorage.getItem('userId'));
+          console.log('   - User Name:', localStorage.getItem('userName'));
+          console.log('   - Email:', localStorage.getItem('email'));
+          console.log('   - Profile Photo:', localStorage.getItem('profilePhotoUrl'));
+          
+          // Tunggu sebentar agar localStorage tersimpan sempurna
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Force full page reload ke homepage untuk load data localStorage
+          console.log('🔄 Redirecting to homepage...');
+          window.location.href = '/';
         } else {
           setError(loginResult.error || 'Password salah');
         }
       } else {
         // Email belum terdaftar - redirect ke sign up
+        console.log('📧 Email not found, redirecting to signup...');
         router.push(`/signup?email=${encodeURIComponent(email)}`);
       }
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error('❌ Login error:', err);
       setError(err.message || 'Terjadi kesalahan saat login');
     } finally {
       setLoading(false);
@@ -69,14 +84,14 @@ export default function LoginPage() {
         <div className="bg-white rounded-3xl shadow-lg p-8">
           {/* Logo/Title */}
           <div className="text-center mb-8">
-            <div className=" flex items-center justify-center mx-auto mb-4">
-               <Image
-                              src="/assets/logo-rewearr.png"
-                              alt="ReWear Logo"
-                              width={140}
-                              height={40}
-                              className="object-contain"
-                            />
+            <div className="flex items-center justify-center mx-auto mb-4">
+              <Image
+                src="/assets/logo-rewearr.png"
+                alt="ReWear Logo"
+                width={140}
+                height={40}
+                className="object-contain"
+              />
             </div>
             <p className="text-gray-600 text-sm mt-1">Beli pakaian bekas berkualitas</p>
           </div>
