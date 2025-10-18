@@ -217,7 +217,7 @@ export default function TransactionSuccessPage() {
           </button>
           
           <button
-            onClick={() => router.push('/home')}
+            onClick={() => router.push('/')}
             className="w-full bg-white text-gray-700 font-semibold py-4 rounded-full hover:bg-gray-50 transition-colors shadow-md"
           >
             Kembali ke Beranda

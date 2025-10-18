@@ -429,12 +429,6 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 mb-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Produk Pilihan</h2>
-          <Link 
-            href="/products"
-            className="text-green-600 hover:text-green-700 font-medium"
-          >
-            Lihat Semua →
-          </Link>
         </div>
 
         <div className="grid grid-cols-4 gap-6">
