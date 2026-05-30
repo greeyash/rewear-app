@@ -24,7 +24,7 @@ fashion consumption.
 - **Frontend:** Next.js
 - **Backend & Database:** Supabase (PostgreSQL)
 - **Auth:** Supabase Auth
-- **AI Grading:** [model/API yang kamu pakai]
+- **AI Grading:** Gemini API
 
 ## My Role
 As **Team Lead & Full-stack Developer**, I was responsible for:
